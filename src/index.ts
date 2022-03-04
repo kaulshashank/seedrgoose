@@ -56,7 +56,7 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
 
             return children.reduce<State<T>[]>((children, childState) => {
 
-                const assignStateRef = (key: string | string[]) => assignRef(state._doc, key, childState._doc._id);
+                const assignChildIdToDoc = (key: string | string[]) => assignRef(state._doc, key, childState._doc._id);
                 const assignDocIdToChild = (key: string | string[]) => assignRef(childState._doc, key, state._doc._id);
 
                 if (refs.length) {
@@ -65,7 +65,7 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
                         if (currentRef.keys && currentRef.keys.length && childState._doc._id) {
                             for (const key of currentRef.keys) {
                                 if (key.model === childState._model) {
-                                    assignStateRef(key.key);
+                                    assignChildIdToDoc(key.key);
                                 }
                             }
                         }
