@@ -6,6 +6,7 @@ Composable seeding for mongoose models.
 
 ```
 import { model, seed } from "seedmongoose";
+import mongoose from "mongoose";
 
 // Create models
 const MageSchema = new mongoose.Schema({ /* ... */ });
@@ -58,14 +59,31 @@ Returns - `method`
 Returns - `State`
 
 #### `seed(state)`
+Seed documents created using `method()`.
 
 * state: [State](#State) (required) - State tree created by `method()` calls.
+
+Returns - `Promise<State>`
+
+#### `cleanup(state)`
+Delete documents seeded using `seed()`.
+
+* state: [State](#State) (required) - State tree created by `method()` calls.
+
+Returns - `Promise<void>`
+
+#### `patch(state, patches)`
+Modify values of a document created using `method()`.
+
+* state: [State](#State) (required) - State tree created by `method()` calls.
+* patches: Record<string, any> - Key-value pair of mongoose dot notation paths and the value to be set.
 
 Returns - `Promise<State>`
 
 ### **Types**
 
 #### `Ref`
+Used for modelling references between models.
 
 * model: mongoose.Model (required)
 * keys: Array (required)
