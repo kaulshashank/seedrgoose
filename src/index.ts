@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 
 export interface State<T> {
     _model: mongoose.Model<T>;
+    _doc: mongoose.HydratedDocument<T>;
     collection: string;
-    doc: mongoose.HydratedDocument<T>;
     children: State<T>[];
 }
 
@@ -47,7 +47,7 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
 
         const state: State<T> = {
             _model: model,
-            doc,
+            _doc: doc,
             collection: doc.collection.name,
             children: []
         };
@@ -56,13 +56,13 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
 
             return children.reduce<State<T>[]>((children, childState) => {
 
-                const assignStateRef = (key: string | string[]) => assignRef(state.doc, key, childState.doc._id);
-                const assignDocIdToChild = (key: string | string[]) => assignRef(childState.doc, key, state.doc._id);
+                const assignStateRef = (key: string | string[]) => assignRef(state._doc, key, childState._doc._id);
+                const assignDocIdToChild = (key: string | string[]) => assignRef(childState._doc, key, state._doc._id);
 
                 if (refs.length) {
                     const currentRef = refs.find(ref => ref.model === state._model);
                     if (currentRef) {
-                        if (currentRef.keys && currentRef.keys.length && childState.doc._id) {
+                        if (currentRef.keys && currentRef.keys.length && childState._doc._id) {
                             for (const key of currentRef.keys) {
                                 if (key.model === childState._model) {
                                     assignStateRef(key.key);
@@ -72,7 +72,7 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
                     }
 
                     const childRefs = refs.filter(ref => ref.keys.some(key => key.model === state._model));
-                    if (state.doc && state.doc._id) {
+                    if (state._doc && state._doc._id) {
                         for (const ref of childRefs) {
                             for (const key of ref.keys) {
                                 if (key.model === state._model) {
@@ -105,20 +105,25 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
 
 export async function seed<T>(stateTree: State<T>) {
     await Promise.all([
-        stateTree.doc.save(),
+        stateTree._doc.save(),
         ...stateTree.children.map(child => seed(child))
     ]);
 
     return stateTree;
 }
 
-export function patch<T>(model: mongoose.Model<T>, overrides: Partial<T>) {
-    return model;
+export function patch<T>(state: State<T>, patches: Record<string, any>): State<T> {
+    const document = state._doc;
+    for (const path in patches) {
+        const value = patches[path];
+        document.set(path, value);
+    }
+    return state;
 }
 
 export async function cleanup<T>(stateTree: State<T>) {
     await Promise.all([
-        stateTree.doc.delete(),
+        stateTree._doc.delete(),
         ...stateTree.children.map(child => cleanup(child))
     ]);
 }
