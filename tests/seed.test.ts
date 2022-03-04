@@ -1,17 +1,20 @@
 import { model, seed } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
+import { Mongoose } from "mongoose";
 import { expect } from "chai";
 
-describe("Tests", function () {
+describe("seed()", function () {
     let mms: MongoMemoryServer;
+
+    const mongoose = new Mongoose();
+
     before("Connect", async function () {
         mms = await MongoMemoryServer.create();
 
         await mongoose.connect(mms.getUri());
     })
 
-    describe("seed() with 'Ref'", function () {
+    describe("with 'Ref'", function () {
 
         const ElderSchema = new mongoose.Schema({
             name: String,
@@ -21,7 +24,7 @@ describe("Tests", function () {
             }
         });
         const ElderModel = mongoose.model("elders", ElderSchema);
-        
+
         const MageSchema = new mongoose.Schema({
             name: String,
             element: String,
@@ -34,7 +37,7 @@ describe("Tests", function () {
             }]
         });
         const MageModel = mongoose.model("mages", MageSchema);
-        
+
         const DragonSchema = new mongoose.Schema({
             name: String,
             age: {
@@ -44,9 +47,9 @@ describe("Tests", function () {
             mageId: mongoose.Types.ObjectId,
             goldbars: [mongoose.Types.ObjectId],
         });
-        
+
         const DragonModel = mongoose.model("dragons", DragonSchema);
-        
+
         const GoldBarSchema = new mongoose.Schema({
             weightInKg: {
                 type: Number,
@@ -56,7 +59,7 @@ describe("Tests", function () {
             mageId: mongoose.Types.ObjectId
         });
         const GoldBarModel = mongoose.model("goldbars", GoldBarSchema);
-        
+
         const WandSchema = new mongoose.Schema({
             wood: String,
         });
