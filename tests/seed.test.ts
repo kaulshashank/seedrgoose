@@ -11,7 +11,7 @@ describe("Tests", function () {
         await mongoose.connect(mms.getUri());
     })
 
-    describe("seed()", function () {
+    describe("seed() with 'Ref'", function () {
 
         const ElderSchema = new mongoose.Schema({
             name: String,
