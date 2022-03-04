@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-interface State<T> {
+export interface State<T> {
     _model: mongoose.Model<T>;
     collection: string;
     doc: mongoose.HydratedDocument<T>;
@@ -116,4 +116,9 @@ export function patch<T>(model: mongoose.Model<T>, overrides: Partial<T>) {
     return model;
 }
 
-export function cleanup<T>(state: State<T>) { }
+export async function cleanup<T>(stateTree: State<T>) {
+    await Promise.all([
+        stateTree.doc.delete(),
+        ...stateTree.children.map(child => cleanup(child))
+    ]);
+}
