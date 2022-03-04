@@ -8,6 +8,7 @@ export interface State<T> {
 }
 
 type Method<T> = (...childStates: State<T>[]) => State<T>;
+
 interface Ref {
     model: mongoose.Model<any>;
     keys: Array<{
@@ -15,6 +16,7 @@ interface Ref {
         model: mongoose.Model<any>;
     }>;
 }
+
 type Refs = Ref[];
 
 export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
@@ -42,7 +44,7 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
         }
     }
 
-    function method(...childStates: State<T>[]) {
+    function method(...childStates: State<T>[]): State<T> {
         const doc = new model();
 
         const state: State<T> = {
@@ -103,7 +105,7 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
     return method;
 }
 
-export async function seed<T>(stateTree: State<T>) {
+export async function seed<T>(stateTree: State<T>): Promise<State<T>> {
     await Promise.all([
         stateTree._doc.save(),
         ...stateTree.children.map(child => seed(child))
@@ -121,7 +123,7 @@ export function patch<T>(state: State<T>, patches: Record<string, any>): State<T
     return state;
 }
 
-export async function cleanup<T>(stateTree: State<T>) {
+export async function cleanup<T>(stateTree: State<T>): Promise<void> {
     await Promise.all([
         stateTree._doc.delete(),
         ...stateTree.children.map(child => cleanup(child))
