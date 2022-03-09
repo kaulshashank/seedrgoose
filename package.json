@@ -1,6 +1,6 @@
 {
-  "name": "seedmongoose",
-  "version": "0.1.0",
+  "name": "seedrgoose",
+  "version": "1.0.0",
   "description": "Seed MongoDB with using composable functions.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
