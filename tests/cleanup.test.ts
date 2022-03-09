@@ -1,4 +1,4 @@
-import { cleanup, model, seed, State } from "../src";
+import { cleanup, model, seed, State, StateWithDoc } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { Mongoose } from "mongoose";
 import { expect } from "chai";
@@ -102,7 +102,7 @@ describe("cleanup()", function () {
         const dragon = model(DragonModel, refs);
         const goldbar = model(GoldBarModel, refs);
 
-        let stateTree: State<any>;
+        let stateTree: StateWithDoc<any>;
         before("Seed", async () => {
             stateTree = await seed(
                 elder(

@@ -215,6 +215,15 @@ describe("seed()", function () {
             expect(mageDoc._id).to.exist;
             expect(mageDoc.name).to.not.exist;
 
+            for (const mage of mages) {
+                expect(mage).to.have.property("wands").to.be.an("array");
+                if (mage.wands && mage.wands.length) {
+                    expect(mage.wands).to.have.lengthOf(2);
+                } else {
+                    expect(mage.wands).to.have.lengthOf(0);
+                }
+            }
+
             for (const dragon of dragons) {
                 expect(dragon._id).to.exist;
                 expect(dragon.name).to.not.exist;
