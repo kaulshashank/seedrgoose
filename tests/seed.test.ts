@@ -112,7 +112,7 @@ describe("seed()", function () {
             ]);
         });
 
-        it("Single document", async function () {
+        it("Seed single document", async function () {
             await seed(mage());
 
             const result = await MageModel.find({});
@@ -125,7 +125,28 @@ describe("seed()", function () {
             expect(doc.name).to.not.exist;
         });
 
-        it("Document stores a single parent reference", async function () {
+        it("Seed composed state twice", async function () {
+            const tree = elder(wand());
+
+            await Promise.all([
+                seed(tree),
+                seed(tree)
+            ]);
+
+            const elders = await ElderModel.find({});
+            const wands = await WandModel.find({});
+
+            expect(elders[0]).to.exist;
+            expect(wands[0]).to.exist;
+
+            for (const elder of elders) {
+                const validWands = wands.filter(wand => wand._id.toString() === elder.wand.wandId.toString());
+                expect(validWands).to.be.an("array");
+                expect(validWands, "Found more than one wand for the created elder").to.have.lengthOf(1);
+            }
+        });
+
+        it("Seed a document with reference to parent", async function () {
 
             await seed(
                 mage(
@@ -151,22 +172,22 @@ describe("seed()", function () {
             }
         });
 
-        it("Big tree", async function () {
-            await seed(
-                elder(
+        it("Seed a big tree with all sorts of references", async function () {
+            const tree = elder(
+                wand(),
+                mage(
                     wand(),
-                    mage(
-                        wand(),
-                        wand(),
-                        dragon(
-                            goldbar(),
-                            goldbar(),
-                        ),
-                        dragon()
+                    wand(),
+                    dragon(
+                        goldbar(),
+                        goldbar(),
                     ),
-                    mage()
-                )
+                    dragon()
+                ),
+                mage()
             );
+
+            await seed(tree);
 
             const elders = await ElderModel.find({});
             const mages = await MageModel.find({});
@@ -215,7 +236,7 @@ describe("seed()", function () {
     });
 
     after("Disconnect", async function () {
-        mms.stop();
+        await mms.stop();
     });
 
 });
