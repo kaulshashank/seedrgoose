@@ -1,11 +1,12 @@
 {
   "name": "seedrgoose",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Seed MongoDB with using composable functions.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "test": "mocha",
+    "prepublish": "npm run build",
     "build": "tsc",
     "build:w": "tsc -w"
   },
