@@ -2,6 +2,8 @@
 
 Composable seeding for mongoose models.
 
+---
+
 ## Example
 
 ```
@@ -26,20 +28,31 @@ const refs = [
 ];
 
 // Create seeder methods
+
 const mage = model(MageModel, refs);
 const dragon = model(DragonModel, refs);
 
 // Compose a method for one dragon document
 // with mageId == parent mage's _id
+
 const mageWithOneDragon = mage(dragon());
 
 // Seed composed method
+
 await seed(mageWithOneDragon);
 ```
 
 See tests folder for more examples.
 
 ---
+
+
+## Modelling References
+
+This module does not currently support using [`ref`](https://mongoosejs.com/docs/api.html#schematype_SchemaType-ref) to populate references in the composed tree. To achieve correct population of refs you can provide a data structure of type [`Ref[]`](#Ref).
+
+---
+
 
 ## API
 
@@ -78,7 +91,7 @@ Modify values of a document created using `method()`.
 * state: [State](#State) (required) - State tree created by `method()` calls.
 * patches: Record<string, any> - Key-value pair of mongoose dot notation paths and the value to be set.
 
-Returns - `Promise<State>`
+Returns - `State`
 
 ### **Types**
 
