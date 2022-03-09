@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
 
-export interface State<T> {
-    _model: mongoose.Model<T>;
-    _doc: mongoose.HydratedDocument<T>;
-    collection: string;
-    children: State<T>[];
-}
 
 type Method<T> = (...childStates: State<T>[]) => State<T>;
 
@@ -19,7 +13,40 @@ interface Ref {
 
 type Refs = Ref[];
 
+export interface State<T> {
+    _model: mongoose.Model<T>;
+    _doc: mongoose.HydratedDocument<T>;
+    collection: string;
+    children: State<T>[];
+    refs: Refs
+}
+
 export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
+
+    function method(...childStates: State<T>[]): State<T> {
+        const doc = new model();
+
+        const state: State<T> = {
+            _model: model,
+            _doc: doc,
+            collection: doc.collection.name,
+            children: [],
+            refs
+        };
+
+        state.children.push(...childStates);
+
+        return state;
+    };
+
+    return method;
+}
+
+export async function seed<T>(state: State<T>): Promise<State<T>> {
+
+    const {
+        refs
+    } = state;
 
     function assignRef(doc: mongoose.Document, key: string | string[], ref: mongoose.Types.ObjectId) {
         const isArrayOfRefs = Array.isArray(key);
@@ -44,74 +71,54 @@ export function model<T>(model: mongoose.Model<T>, refs: Refs = []): Method<T> {
         }
     }
 
-    function method(...childStates: State<T>[]): State<T> {
-        const doc = new model();
+    function populateChildren(children: State<T>[]) {
+        return children.reduce<State<T>[]>((children, childState) => {
 
-        const state: State<T> = {
-            _model: model,
-            _doc: doc,
-            collection: doc.collection.name,
-            children: []
-        };
+            const assignChildIdToDoc = (key: string | string[]) => assignRef(state._doc, key, childState._doc._id);
+            const assignDocIdToChild = (key: string | string[]) => assignRef(childState._doc, key, state._doc._id);
 
-        function populateChildren(children: State<T>[]) {
-
-            return children.reduce<State<T>[]>((children, childState) => {
-
-                const assignChildIdToDoc = (key: string | string[]) => assignRef(state._doc, key, childState._doc._id);
-                const assignDocIdToChild = (key: string | string[]) => assignRef(childState._doc, key, state._doc._id);
-
-                if (refs.length) {
-                    const currentRef = refs.find(ref => ref.model === state._model);
-                    if (currentRef) {
-                        if (currentRef.keys && currentRef.keys.length && childState._doc._id) {
-                            for (const key of currentRef.keys) {
-                                if (key.model === childState._model) {
-                                    assignChildIdToDoc(key.key);
-                                }
+            if (refs.length) {
+                const currentRef = refs.find(ref => ref.model === state._model);
+                if (currentRef) {
+                    if (currentRef.keys && currentRef.keys.length && childState._doc._id) {
+                        for (const key of currentRef.keys) {
+                            if (key.model === childState._model) {
+                                assignChildIdToDoc(key.key);
                             }
                         }
-                    }
-
-                    const childRefs = refs.filter(ref => ref.keys.some(key => key.model === state._model));
-                    if (state._doc && state._doc._id) {
-                        for (const ref of childRefs) {
-                            for (const key of ref.keys) {
-                                if (key.model === state._model) {
-                                    assignDocIdToChild(key.key);
-                                }
-                            }
-                        }
-                    }
-
-                    if (childState.children && childState.children.length) {
-                        populateChildren(childState.children);
                     }
                 }
 
-                children.push(childState);
+                const childRefs = refs.filter(ref => ref.keys.some(key => key.model === state._model));
+                if (state._doc && state._doc._id) {
+                    for (const ref of childRefs) {
+                        for (const key of ref.keys) {
+                            if (key.model === state._model) {
+                                assignDocIdToChild(key.key);
+                            }
+                        }
+                    }
+                }
 
-                return children;
-            }, []);
-        }
+                if (childState.children && childState.children.length) {
+                    populateChildren(childState.children);
+                }
+            }
 
-        const populatedChildren = populateChildren(childStates);
+            children.push(childState);
 
-        state.children.push(...populatedChildren);
+            return children;
+        }, []);
+    }
 
-        return state;
-    };
+    populateChildren(state.children);
 
-    return method;
-}
-
-export async function seed<T>(stateTree: State<T>): Promise<State<T>> {
     await Promise.all([
-        stateTree._doc.save(),
-        ...stateTree.children.map(child => seed(child))
+        state._doc.save(),
+        ...state.children.map(child => seed(child))
     ]);
 
-    return stateTree;
+    return state;
 }
 
 export function patch<T>(state: State<T>, patches: Record<string, any>): State<T> {
