@@ -1,11 +1,11 @@
-# `seedmongoose`
+# `seedrgoose`
 
 Composable seeding for mongoose models.
 
 ## Example
 
 ```
-import { model, seed } from "seedmongoose";
+import { model, seed } from "seedrgoose";
 import mongoose from "mongoose";
 
 // Create models
