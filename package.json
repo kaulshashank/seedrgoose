@@ -1,12 +1,13 @@
 {
   "name": "seedrgoose",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Seed MongoDB with using composable functions.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "test": "mocha",
-    "prepublish": "npm run build",
+    "prepublishOnly" : "npm test",
+    "prepare" : "npm run build",
     "build": "tsc",
     "build:w": "tsc -w"
   },
@@ -17,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://www.github.com/kaulshashank/seedrgoose.git"
+    "url": "git+https://www.github.com/kaulshashank/seedrgoose.git"
   },
   "license": "MIT",
   "peerDependencies": {
