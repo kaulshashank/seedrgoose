@@ -1,8 +1,8 @@
 import type { Document, Model, HydratedDocument, ObjectId } from "mongoose";
 
-type Method<T> = (...childStates: State<T>[]) => State<T>;
+export type Method<T> = (...childStates: State<T>[]) => State<T>;
 
-interface Ref {
+export interface Ref {
     model: Model<any>;
     keys: Array<{
         key: string | string[];
@@ -10,7 +10,7 @@ interface Ref {
     }>;
 }
 
-type Refs = Ref[];
+export type Refs = Ref[];
 
 export interface State<T> {
     _model: Model<T>;
