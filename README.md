@@ -13,7 +13,10 @@ import mongoose from "mongoose";
 const MageSchema = new mongoose.Schema({ /* ... */ });
 const MageModel = mongoose.model("mages", MageSchema);
 
-const DragonSchema = new mongoose.Schema({ /* ... */ });
+const DragonSchema = new mongoose.Schema({
+    mageId: mongoose.Types.ObjectId,
+    /* ... */
+});
 const DragonModel = mongoose.model("dragons", DragonSchema);
 
 // Connect mongoose to your database
