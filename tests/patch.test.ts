@@ -49,7 +49,7 @@ describe("patch()", function () {
 
     const wizard = model(WizardModel);
 
-    afterEach("Delete wizard", async function() {
+    afterEach("Delete wizard", async function () {
         await WizardModel.deleteMany({});
     });
 
@@ -71,7 +71,43 @@ describe("patch()", function () {
         const wizards = await WizardModel.find({});
 
         expect(wizards[0]).to.exist;
-        
+
+        const wiz = wizards[0];
+
+        expect(wiz).to.have.property("firstName").to.eq("Merlin");
+        expect(wiz).to.have.property("lastName").to.eq("The Wizard");
+        expect(wiz).to.have.property("age").to.eq(50);
+        expect(wiz).to.have.property("stats").to.have.property("hp").to.eq(50);
+        expect(wiz).to.have.property("stats").to.have.property("magic").to.eq(3);
+        expect(wiz).to.have.property("beasts").to.have.lengthOf(2);
+        expect(wiz.beasts[0]).to.have.property("name").to.eq("Elvarg");
+        expect(wiz.beasts[1]).to.have.property("power").to.eq(5);
+
+    });
+
+    it("Patch already patched state", async function () {
+
+        await seed(
+            patch(
+                patch(
+                    wizard(),
+                    {
+                        firstName: "Merlin",
+                        lastName: "The Wizard",
+                        'stats.hp': 50,
+                    }
+                ),
+                {
+                    'beasts.0.name': "Elvarg",
+                    'beasts.1.power': 5
+                }
+            )
+        );
+
+        const wizards = await WizardModel.find({});
+
+        expect(wizards[0]).to.exist;
+
         const wiz = wizards[0];
 
         expect(wiz).to.have.property("firstName").to.eq("Merlin");

@@ -162,7 +162,10 @@ export async function seed<T>(topLevelState: State<T>): Promise<StateWithDoc<T>>
 }
 
 export function patch<T>(state: State<T>, patches: Record<string, any>): State<T> {
-    state.patches = patches;
+    if (state.patches)
+        state.patches = { ...state.patches, ...patches }
+    else
+        state.patches = patches;
     return state;
 }
 
