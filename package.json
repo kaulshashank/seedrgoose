@@ -2,6 +2,16 @@
   "name": "seedrgoose",
   "version": "1.1.0",
   "description": "Seed MongoDB with using composable functions.",
+  "keywords": [
+    "mongoose",
+    "seeding",
+    "seeder",
+    "mongodb",
+    "data",
+    "functional",
+    "compose",
+    "mongoose-seeding"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
