@@ -7,6 +7,7 @@ export interface Ref {
     keys: Array<{
         key: string | string[];
         model: Model<any>;
+        keyOnForeignModel?: string;
     }>;
 }
 
@@ -114,14 +115,14 @@ export async function seed<T>(topLevelState: State<T>): Promise<StateWithDoc<T>>
         if (refs.length) {
             function populateRefsForChildren(children: StateWithDoc<T>[]) {
                 for (const childState of children) {
-                    const assignChildIdToDoc = (key: string | string[]) => assignRef(baseState._doc, key, childState._doc._id);
-                    const assignDocIdToChild = (key: string | string[]) => assignRef(childState._doc, key, baseState._doc._id);
+                    const assignChildIdToDoc = (key: string | string[], foreignKey: string = "_id") => assignRef(baseState._doc, key, childState._doc.get(foreignKey));
+                    const assignDocIdToChild = (key: string | string[], foreignKey: string = "_id") => assignRef(childState._doc, key, baseState._doc.get(foreignKey));
 
                     const currentRef = refs.find(ref => ref.model === baseState._model);
                     if (currentRef && currentRef.keys && currentRef.keys.length && childState._doc._id) {
                         for (const key of currentRef.keys) {
                             if (key.model === childState._model) {
-                                assignChildIdToDoc(key.key);
+                                assignChildIdToDoc(key.key, key.keyOnForeignModel);
                             }
                         }
                     }
@@ -131,7 +132,7 @@ export async function seed<T>(topLevelState: State<T>): Promise<StateWithDoc<T>>
                         for (const ref of childRefs) {
                             for (const key of ref.keys) {
                                 if (key.model === baseState._model) {
-                                    assignDocIdToChild(key.key);
+                                    assignDocIdToChild(key.key, key.keyOnForeignModel);
                                 }
                             }
                         }

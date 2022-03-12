@@ -1,4 +1,4 @@
-import { model, seed } from "../src";
+import { model, patch, Refs, seed } from "../src";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { Mongoose } from "mongoose";
 import { expect } from "chai";
@@ -44,6 +44,7 @@ describe("seed()", function () {
                 type: Number,
                 default: 100
             },
+            mageName: String,
             mageId: mongoose.Types.ObjectId,
             goldbars: [mongoose.Types.ObjectId],
         });
@@ -65,7 +66,7 @@ describe("seed()", function () {
         });
         const WandModel = mongoose.model("wands", WandSchema);
 
-        const refs = [
+        const refs: Refs = [
             {
                 model: ElderModel,
                 keys: [
@@ -85,6 +86,7 @@ describe("seed()", function () {
                 keys: [
                     { key: "mageId", model: MageModel },
                     { key: ["goldbars"], model: GoldBarModel },
+                    { key: "mageName", model: MageModel, keyOnForeignModel: "name" }
                 ]
             },
             {
@@ -241,6 +243,29 @@ describe("seed()", function () {
                 expect(mages.some(mage => goldbar.mageId.toString() === mage._id.toString())).to.be.true;
                 expect(goldbarDragon.goldbars.some((gbar: typeof GoldBarModel) => gbar.toString() === goldbar._id.toString())).to.be.true;
             }
+        });
+
+        it("Foreign field", async function () {
+            await seed(
+                patch(
+                    mage(
+                        dragon()
+                    ),
+                    { name: "Merlin" }
+                )
+            );
+
+            const mages = await MageModel.find({});
+            const dragons = await DragonModel.find({});
+
+            expect(mages).to.be.an("array");
+            expect(dragons).to.be.an("array");
+
+            const mageTest = mages[0];
+            const dragonTest = dragons[0];
+
+            expect(mageTest).to.have.property("name").to.eq("Merlin");
+            expect(dragonTest).to.have.property("mageName").to.eq(mageTest.name);
         });
     });
 
