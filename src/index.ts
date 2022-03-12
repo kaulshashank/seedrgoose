@@ -25,6 +25,12 @@ export interface StateWithDoc<T> extends State<T> {
     children: StateWithDoc<T>[]
 }
 
+export interface DocumentTree {
+    document: Document;
+    collection: string;
+    children: DocumentTree[];
+}
+
 export function model<T>(model: Model<T>, refs: Refs = []): Method<T> {
 
     function method(...childStates: State<T>[]): State<T> {
@@ -174,4 +180,18 @@ export async function cleanup<T>(stateTree: StateWithDoc<T>): Promise<void> {
         stateTree._doc.delete(),
         ...stateTree.children.map(child => cleanup(child))
     ]);
+}
+
+export function documents<T>(stateTree: StateWithDoc<T>): DocumentTree {
+    if (!stateTree._doc) {
+        throw new Error("documents(): No documents found. Please call seed() on your composed state first and pass the result into documents().");
+    }
+
+    const documentTree: DocumentTree = {
+        document: stateTree._doc,
+        collection: stateTree.collection,
+        children: stateTree.children.map(x => documents(x))
+    };
+
+    return documentTree;
 }
