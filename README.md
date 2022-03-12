@@ -52,6 +52,32 @@ await seed(mageWithOneDragon);
 
 ---
 
+## Table Of Contents
+
+  * [Modelling References](#modelling-references)
+  * [Modelling some common use cases](#modelling-some-common-use-cases)
+    + [Single reference from one model to another](#single-reference-from-one-model-to-another)
+    + [Array of references from one model to another](#array-of-references-from-one-model-to-another)
+    + [Reference inside a subdocument array](#reference-inside-a-subdocument-array)
+    + [References to documents 2 or more levels above in the hierarchy.](#references-to-documents-2-or-more-levels-above-in-the-hierarchy)
+    + [Customizing fields on documents](#customizing-fields-on-documents)
+    + [Populating fields on model from different models](#populating-fields-on-model-from-different-models)
+    + [I need to access a reference from a document in the state tree that I am building](#i-need-to-access-a-reference-from-a-document-in-the-state-tree-that-i-am-building)
+  * [API](#api)
+    + [**Functions**](#--functions--)
+      - [`model(mongooseModel, [refs])`](#-model-mongoosemodel---refs---)
+      - [`<method>([...states])`](#--method---states---)
+      - [`seed(state)`](#-seed-state--)
+      - [`cleanup(state)`](#-cleanup-state--)
+      - [`patch(state, patches)`](#-patch-state--patches--)
+      - [`documents(state)`](#-documents-state--)
+    + [**Types**](#--types--)
+      - [`Ref`](#-ref-)
+      - [`DocumentTree`](#-documenttree-)
+      - [`State`](#-state-)
+
+---
+
 ## Modelling References
 
 This module does not currently support using [`ref`](https://mongoosejs.com/docs/api.html#schematype_SchemaType-ref) to populate references in the composed tree. To achieve correct population of refs provide a data structure of type [`Ref[]`](#Ref) to [`model()`](#methodstates).
@@ -289,6 +315,53 @@ const teamWithTwoModifiedUsers = team(
 );
 ```
 
+### Populating fields on model from different models
+
+Use `keys.keyOnForeignModel` in the Refs object.
+
+```
+const mongoose = require("mongoose");
+const faker = require("faker");
+const { model } = require("seedrgoose");
+
+const UserModel = mongoose.model(
+    "users",
+    new mongoose.Schema({
+        username: String,
+        teamName: String,
+        teamId: mongoose.Types.ObjectId,
+        /* ... */
+    })
+);
+const TeamModel = mongoose.model(
+    "teams",
+    new mongoose.Schema({
+        name: String,
+        /* ... */
+    })
+);
+
+const Refs = [
+    { model: TeamModel, keys: [] },
+    {
+        model: UserModel,
+        keys: [
+            { key: "teamId", model: TeamModel },
+            { key: "teamName", model: TeamModel, keyOnForeignModel: "name" },
+        ]
+    }
+];
+
+const user = model(UserModel, Refs);
+const team = model(TeamModel, Refs);
+
+// user's teamName value will be 
+// the name value of it's team
+// document i.e. Test
+const userInTeam = patch(team(user()), { name: "Test" });
+
+```
+
 ### I need to access a reference from a document in the state tree that I am building
 
 You can do this in two ways - Before or after seeding.
@@ -430,8 +503,9 @@ Used for modelling references between models.
 
 - model: mongoose.Model (required)
 - keys: Array (required)
-  - key: string | string[] - Field on current model. Use `string[]` when you want to model array of ids or array of subdocuments with keys that have foreign references.
-  - model: mongoose.Model - Foreign model
+  - key: string | string[] (required) - Field on current model. Use `string[]` when you want to model array of ids or array of subdocuments with keys that have foreign references.
+  - model: mongoose.Model (required) - Foreign model
+  - keyOnForeignModel: String (optional) - Field on foreign model whose value will be assigned to the `key` field.
 
 #### `DocumentTree`
 
